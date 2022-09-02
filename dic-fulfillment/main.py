@@ -6,26 +6,36 @@ from .json_dictionary import Dictionary
 from werkzeug.utils import secure_filename
 
 ALLOWED_EXTENSIONS = os.environ.get('ALLOWED_EXTENSIONS')
-CODEX_LOCATION = os.environ.get('CODEX_LOCATION')
 MONGO_ENDPOINT = os.environ.get('MONGO_ENDPOINT')
 
-with open(CODEX_LOCATION) as f:
-    dictionary_file = json.load(f)
-
-codex = Dictionary(dictionary_file)
 app = Flask(__name__)
 api = Api(app)
 
-app.config['UPLOAD_FOLDER'] = 'static/'
+app.config['DICTIONARIES_DIRECTORY'] = os.environ.get('DICTIONARIES_DIRECTORY')
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port='5000')
 
-def composed_response(status, message, file_name):
+def read_json_dictionary(filename):
+    print(filename)
+    try:
+        with open(os.path.join(app.config['DICTIONARIES_DIRECTORY'], filename)) as f:
+            dictionary_file = json.load(f)
+            codex = Dictionary(dictionary_file)
+
+            return codex._entries
+
+    except Exception as e:
+        # message = 'Could not read JSON dictionary.'
+        # return composed_response(500, message, '')
+        return 'There was an error reading your dictionary file.', e
+
+
+def composed_response(status, message, payload):
     data = {
         'status': status,
         'message': message,
-        'fileName': file_name,
+        'payload': payload,
     }
 
     response = make_response(jsonify(data))
@@ -51,7 +61,7 @@ def allowed_file(filename):
 @app.route('/upload-file', methods=['GET', 'POST'])
 def upload_dictionary():
     file = request.files['file']
-    file.save(secure_filename(file.filename))
+    file.save(os.path.join(app.config['DICTIONARIES_DIRECTORY'], secure_filename(file.filename)))
     
     return composed_response(200, f'{file.filename} was uploaded successfully!', file.filename)
 
@@ -80,14 +90,18 @@ def upload_dictionary():
     #     #     print(f'Couldn\'t upload file {e}')
         
 
-@app.route('/entries')
+@app.route('/entries', methods=['GET'])
 def entries_get():
-    return codex._entries
+    args = request.args
+    json_dictionary = read_json_dictionary(args.get('filename'))
+    message = 'We got you your dictionary successfully!'
 
-@app.route('/define', methods=['POST'])
-def entry_define():
-    request_data = request.get_json()
-    if not request_data:
-        return 'Nothing!'
+    return composed_response(200, message, json_dictionary)
+
+# @app.route('/define', methods=['POST'])
+# def entry_define():
+#     request_data = request.get_json()
+#     if not request_data:
+#         return 'Nothing!'
     
-    return codex.entries_update(request_data)
+#     return codex.entries_update(request_data)
