@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        #dic {
+            height: 500px;
+            width: 500px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Edit</h1>
+    <form method="post" action="/define">
+        <div>
+            <table id="translations">
+                <tr>
+                    <td>STENO</td>
+                    <td>TRAN</td>
+                </tr>
+            </table>
+        </div>
+        <div>
+            <button>submit</button>
+        </div>
+    </form>
+</body>
+
+<script>
+    const data = {};
+    const tranTable = document.querySelector('#translations');
+
+    function createRow(steno, tran) {
+        const row = document.createElement('tr');
+        const stenoCol = document.createElement('td');
+        const tranCol = document.createElement('td');
+
+        stenoCol.innerHTML = steno;
+        tranCol.innerHTML = tran;
+
+        row.appendChild(stenoCol);
+        row.appendChild(tranCol);
+
+        tranTable.appendChild(row);
+    }
+
+    (async () => {
+        const res = await fetch('/entries');
+        const entries = await res.json();
+
+        Object.keys(entries).forEach(entryKey => {
+            createRow(entryKey, entries[entryKey]);
+        });
+    })();
+</script>
+</html>
