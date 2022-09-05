@@ -1,9 +1,11 @@
 import json
 import os
+from datetime import datetime
 from flask import Flask, render_template, redirect, request, flash, jsonify, url_for, make_response
 from flask_restful import Api
 from .json_dictionary import Dictionary
 from werkzeug.utils import secure_filename
+from .mongo import MongoDb
 
 ALLOWED_EXTENSIONS = os.environ.get('ALLOWED_EXTENSIONS')
 MONGO_ENDPOINT = os.environ.get('MONGO_ENDPOINT')
@@ -57,13 +59,31 @@ def edit_get():
 def allowed_file(filename):
     return '.' in filename and \
         filename.rsplit('.', 1)[1].lower() in ('ALLOWED_EXTENSIONS')
+
+def get_extension(filename):
+    return filename.rsplit('.', 1)[1].lower()
         
 @app.route('/upload-file', methods=['GET', 'POST'])
 def upload_dictionary():
+    sub = request.args['sub']
     file = request.files['file']
-    file.save(os.path.join(app.config['DICTIONARIES_DIRECTORY'], secure_filename(file.filename)))
+    now = datetime.now()
+    dictionary_name = secure_filename(f'{sub}_{now}')
+
+    file.save(os.path.join(app.config['DICTIONARIES_DIRECTORY'], dictionary_name))
+    json_dictionary = read_json_dictionary(dictionary_name)
+
+    MongoDb.set_dictionary('test', sub, json_dictionary, get_extension(file.filename))
     
     return composed_response(200, f'{file.filename} was uploaded successfully!', file.filename)
+
+@app.route('/entries', methods=['GET'])
+def entries_get():
+    args = request.args
+    json_dictionary = read_json_dictionary(args.get('filename'))
+    message = 'We got you your dictionary successfully!'
+
+    return composed_response(200, message, json_dictionary)
 
     # if request.method == 'POST':
     #     if 'file' not in request.files:
@@ -90,13 +110,6 @@ def upload_dictionary():
     #     #     print(f'Couldn\'t upload file {e}')
         
 
-@app.route('/entries', methods=['GET'])
-def entries_get():
-    args = request.args
-    json_dictionary = read_json_dictionary(args.get('filename'))
-    message = 'We got you your dictionary successfully!'
-
-    return composed_response(200, message, json_dictionary)
 
 # @app.route('/define', methods=['POST'])
 # def entry_define():
