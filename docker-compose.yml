@@ -2,32 +2,14 @@ version: "3.8"
 services:
 
   # holds dictionary objects and matches to users.
-  mongo:
+  db:
     image: mongo:4.0-xenial
     container_name: mongo
     ports:
       - 27017:27017
-    networks:
-      - backend
     volumes:
       - styktin:/data/db
-      - ./mongo/init-mongo.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
-    restart: unless-stopped
-    command: mongod --auth
-    env_file: .env
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: stkrooty
-      MONGO_INITDB_ROOT_PASSWORD: xx0cant8touch$thisxxy?Cuz^you%suxx0rZ
-      MONGO_INITDB_DATABASE: styktin
-      MONGODB_DATA_DIR: /data/db
-      MONGODB_LOG_DIR: /dev/null
-
-      # mongo -u stkapp -p xx0cant8touch$thisxxy?Cuz^you%suxx0rZ --authenticationDatabase styktin
-
-      #   environment:
-      # MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
-      # MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
-      # MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
+    restart: on-failure
 
   # crunches queries and between frontend and db.
   dic-fulfillment:
@@ -39,14 +21,9 @@ services:
       FLASK_DEBUG: 1
     ports:
       - 5000:5000
-    networks:
-      - frontend
-      - backend
     env_file: .env
     volumes: ['./dic-fulfillment:/home/app']
     restart: on-failure
-    depends_on:
-      - mongo
 
   # next.js app front-end.
   frontend:
@@ -54,45 +31,26 @@ services:
     container_name: frontend
     ports:
       - 3000:3000
-    networks:
-      - frontend
     volumes:
       - ./frontend:/home/frontend
       - /home/frontend/node_modules
       - /home/frontend/.next
       - /home/pages
     env_file: .env
-    depends_on:
-      - mongo
-      - dic-fulfillment
+
     restart: always
 
   # routes queries to appropriate points.
-  nginx:
+  reverse-proxy:
     image: nginx:1.23.1
     container_name: nginx
     depends_on:
       - dic-fulfillment
       - frontend
+    volumes:
+      - ./reverse-proxy/nginx.conf:/etc/nginx/nginx.conf
     ports:
       - 80:80
     restart: on-failure
-    networks:
-     - frontend
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-      - nginxdata:/var/log/nginx
-
 volumes:
   styktin:
-    driver: local
-  appdata:
-    driver: local
-  nginxdata:
-    driver: local
-
-networks:
-  frontend:
-    driver: bridge
-  backend:
-    driver: bridge

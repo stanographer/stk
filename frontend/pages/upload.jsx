@@ -9,7 +9,6 @@ import Highlight from '../components/Highlight';
 
 function UploadDictionaryFile() {
   const { user, isLoading } = useUser();
-  console.log(user)
 
   return (
     <>
@@ -28,8 +27,7 @@ function UploadDictionaryFile() {
               />
             </Col>
             <Col md>
-                <UploadForm user={user} />
-                <h2>{user.sub}</h2>
+                <UploadForm />
               <h2 data-testid="profile-name">{user.name}</h2>
               <p className="lead text-muted" data-testid="profile-email">
                 {user.email}

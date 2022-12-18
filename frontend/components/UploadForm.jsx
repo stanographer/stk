@@ -8,7 +8,6 @@ import {
 } from 'reactstrap';
 
 const UploadForm = props => {
-  const { user } = props;
   const [selectedFile, setSelectedFile] = useState({});
   const [isSelected, setIsSelected] = useState(false);
   const [fileUploadSuccessful, setFileUploadSuccessful] = useState(false);
@@ -17,20 +16,11 @@ const UploadForm = props => {
   const uploadHandler = event => {
     const formData = new FormData();
 
-    console.log(selectedFile)
-    console.log(user)
-
-    try {
-      formData.append('file', selectedFile);
-      formData.append('sub', user.sub);
-      formData.append('file_extension', selectedFile.type);
-    } catch (error) {
-      console.error('error appending file.', error);
-    }
+    formData.append('file', selectedFile);
 
     event.preventDefault();
 
-    fetch(`${process.env.NEXT_PUBLIC_UPLOAD_ENDPOINT}?sub=${user.sub}`, {
+    fetch(process.env.NEXT_PUBLIC_UPLOAD_ENDPOINT, {
       method: 'POST',
       body: formData,
       contentType: 'application/json',
@@ -58,7 +48,7 @@ const UploadForm = props => {
                   <p>filename: {selectedFile.name}</p>
                   <p>file type: {selectedFile.type}</p>
                   <p>size: {selectedFile.size}</p>
-                  <p>last modified: {selectedFile.lastModified}</p>
+                  <p>last modified: {selectedFile.lastModifiedDate.toLocaleDateString()}</p>
                 </div>
               ):
               (
