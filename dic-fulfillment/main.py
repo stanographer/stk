@@ -29,8 +29,6 @@ def read_json_dictionary(filename):
             return codex._entries
 
     except Exception as e:
-        # message = 'Could not read JSON dictionary.'
-        # return composed_response(500, message, '')
         return 'There was an error reading your dictionary file.', e
 
 
@@ -70,12 +68,11 @@ def upload_dictionary():
     file = request.files['file']
     now = datetime.now()
     extension = get_extension(file.filename)
-    print(secure_filename(f'\n\n\n{extension}\n\n\n'))
     dictionary_name = secure_filename(f'{sub}_{now.strftime("%d/%m/%Y_%H:%M:%S")}.{extension}')
-
 
     file.save(os.path.join(app.config['DICTIONARIES_DIRECTORY'], dictionary_name))
     json_dictionary = read_json_dictionary(dictionary_name)
+
     print('JSON DICTIONARIIIIIIIIIIIIIIIIIII', json_dictionary)
     print(sub, json_dictionary, get_extension(file.filename))
     
@@ -106,37 +103,3 @@ def entries_get():
     message = 'We got you your dictionary successfully!'
 
     return composed_response(200, message, json_dictionary)
-
-    # if request.method == 'POST':
-    #     if 'file' not in request.files:
-    #         flash('no file part')
-    #         return redirect(request.url)
-
-    #     # try:
-    #     file = request.files['file']
-    #     print(file.filename)
-
-    #     if file.filename == '':
-    #         flash('no selected file')
-    #         return redirect(request.url)
-
-    #     if file and allowed_file(file.filename):
-    #         filename = secure_filename(file.filename)
-    #         file.save(app.config['UPLOAD_FOLDER'], filename)
-    #         # saved_file = open(app.config['UPLOAD_FOLDER'], filename)
-    #         # content = saved_file.read()
-
-    #         # return jsonify(content)
-    #         return 'file uploaded successfully'
-    #     # except Exception as e:
-    #     #     print(f'Couldn\'t upload file {e}')
-        
-
-
-# @app.route('/define', methods=['POST'])
-# def entry_define():
-#     request_data = request.get_json()
-#     if not request_data:
-#         return 'Nothing!'
-    
-#     return codex.entries_update(request_data)

@@ -31,14 +31,12 @@ class MongoDb:
         print('self.dictionariessssss', self.dictionaries)
         print('DIC to INSERTTTT',json.dumps(dictionary_to_insert))
 
-        # print(self._client)
-
         # set the dictionary id.
         dictionary_id = dictionary_to_insert['_id']
 
         print('dictionary id--------------------', dictionary_id)
+
         # create a mongo record.
-        # print(self.dictionaries)
         dic = self.dictionaries.insert_one(dictionary_to_insert).inserted_id
         
         return jsonify(

@@ -11,7 +11,6 @@ RUN pip3 install -r requirements.txt
 COPY . /home/app
 RUN addgroup --gid "$GROUP_ID" "$GROUP_NAME"
 RUN adduser "$USERNAME" --uid "$USER_ID" --ingroup "$GROUP_NAME" --disabled-password --shell /bin/sh
-# RUN adduser -h
 USER "$USERNAME"
 EXPOSE 3001
 CMD ["python3", "-m" , "flask", "run", "--host=0.0.0.0"]
