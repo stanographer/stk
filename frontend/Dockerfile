@@ -1,3 +1,13 @@
+FROM node:16-alpine3.15
+LABEL MAINTAINER="STK, Stanley Sakai <stanley@stanographer.com>"
+RUN mkdir -p /home/frontend && chown -R node:node /home/frontend
+WORKDIR /home/frontend
+COPY --chown=node:node . .
+USER node
+RUN npm i
+EXPOSE 3000
+CMD ["npm", "run", "dev"]
+
 # FROM node:16-alpine3.15
 # RUN mkdir -p /app
 # WORKDIR /app
@@ -16,17 +26,6 @@
 # COPY . /app
 # EXPOSE 3000
 # CMD ["npm", "run", "dev"]
-
-
-
-FROM node:16-alpine3.15
-RUN mkdir -p /home/frontend && chown -R node:node /home/frontend
-WORKDIR /home/frontend
-COPY --chown=node:node . .
-USER node
-RUN npm i
-EXPOSE 3000
-CMD ["npm", "run", "dev"]
 
 
 # FROM node:lts-alpine as build

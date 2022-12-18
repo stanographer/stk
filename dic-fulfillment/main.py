@@ -8,10 +8,11 @@ from werkzeug.utils import secure_filename
 from .mongo import MongoDb
 
 ALLOWED_EXTENSIONS = os.environ.get('ALLOWED_EXTENSIONS')
-MONGO_ENDPOINT = os.environ.get('MONGO_ENDPOINT')
+MONGO_ADDRESS='mongodb://' + os.environ['MONGODB_USERNAME'] + ':' + os.environ['MONGODB_PASSWORD'] + '@' + os.environ['MONGO_ENDPOINT'] + ':27017/' + os.environ['MONGODB_DATABASE']
 
 app = Flask(__name__)
 api = Api(app)
+mongo_client = MongoDb(MONGO_ADDRESS)
 
 app.config['DICTIONARIES_DIRECTORY'] = os.environ.get('DICTIONARIES_DIRECTORY')
 
@@ -19,10 +20,10 @@ if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port='5000')
 
 def read_json_dictionary(filename):
-    print(filename)
     try:
         with open(os.path.join(app.config['DICTIONARIES_DIRECTORY'], filename)) as f:
-            dictionary_file = json.load(f)
+            file = f.read()
+            dictionary_file = json.loads(file)
             codex = Dictionary(dictionary_file)
 
             return codex._entries
@@ -50,7 +51,7 @@ def composed_response(status, message, payload):
 
 @app.route('/')
 def homepage_get():
-    return render_template('upload.html', name='Upload', mongo_endpoint=MONGO_ENDPOINT)
+    return render_template('upload.html', name='Upload')
 
 @app.route('/edit')
 def edit_get():
@@ -68,14 +69,35 @@ def upload_dictionary():
     sub = request.args['sub']
     file = request.files['file']
     now = datetime.now()
-    dictionary_name = secure_filename(f'{sub}_{now}')
+    extension = get_extension(file.filename)
+    print(secure_filename(f'\n\n\n{extension}\n\n\n'))
+    dictionary_name = secure_filename(f'{sub}_{now.strftime("%d/%m/%Y_%H:%M:%S")}.{extension}')
+
 
     file.save(os.path.join(app.config['DICTIONARIES_DIRECTORY'], dictionary_name))
     json_dictionary = read_json_dictionary(dictionary_name)
-
-    MongoDb.set_dictionary('test', sub, json_dictionary, get_extension(file.filename))
+    print('JSON DICTIONARIIIIIIIIIIIIIIIIIII', json_dictionary)
+    print(sub, json_dictionary, get_extension(file.filename))
     
+    try:
+        mongo_client.set_dictionary(sub, json_dictionary, get_extension(file.filename))
+    except Exception as e:
+        return composed_response(500, 'Request could not be completed.', e)
+
     return composed_response(200, f'{file.filename} was uploaded successfully!', file.filename)
+
+@app.route('/mongo-connect', methods=['GET'])
+def get_mongo_connect():
+    return MONGO_ADDRESS
+
+@app.route('/addmongo', methods=['GET'])
+def add_mongo():
+    try:
+        mongo_client.set_dictionary('testsub', {'test': 'hello'}, 'json')
+    except Exception as e:
+        return composed_response(500, 'Request could not be completed.', e)
+
+    return composed_response(200, {'message', f'was uploaded successfully!'})
 
 @app.route('/entries', methods=['GET'])
 def entries_get():

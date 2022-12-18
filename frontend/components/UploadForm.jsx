@@ -20,9 +20,13 @@ const UploadForm = props => {
     console.log(selectedFile)
     console.log(user)
 
-    formData.append('file', selectedFile);
-    formData.append('sub', user.sub);
-    formData.append('file_extension', selectedFile.type);
+    try {
+      formData.append('file', selectedFile);
+      formData.append('sub', user.sub);
+      formData.append('file_extension', selectedFile.type);
+    } catch (error) {
+      console.error('error appending file.', error);
+    }
 
     event.preventDefault();
 
@@ -54,7 +58,7 @@ const UploadForm = props => {
                   <p>filename: {selectedFile.name}</p>
                   <p>file type: {selectedFile.type}</p>
                   <p>size: {selectedFile.size}</p>
-                  <p>last modified: {selectedFile.lastModifiedDate.toLocaleDateString()}</p>
+                  <p>last modified: {selectedFile.lastModified}</p>
                 </div>
               ):
               (
