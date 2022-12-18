@@ -27,8 +27,6 @@ def read_json_dictionary(filename):
             return codex._entries
 
     except Exception as e:
-        # message = 'Could not read JSON dictionary.'
-        # return composed_response(500, message, '')
         return 'There was an error reading your dictionary file.', e
 
 
@@ -74,39 +72,28 @@ def upload_dictionary():
     file = request.files['file']
     now = datetime.now()
     extension = get_extension(file.filename)
-    print(secure_filename(f'\n\n\n{extension}\n\n\n'))
     dictionary_name = secure_filename(f'{sub}_{now.strftime("%d/%m/%Y_%H:%M:%S")}.{extension}')
 
     file.save(os.path.join(app.config['DICTIONARIES_DIRECTORY'], dictionary_name))
     json_dictionary = read_json_dictionary(dictionary_name)
+
     print('JSON DICTIONARIIIIIIIIIIIIIIIIIII', json_dictionary)
     print(sub, json_dictionary, get_extension(file.filename))
 
     return composed_response(200, f'{file.filename} was uploaded successfully!', file.filename)
-    # if request.method == 'POST':
-    #     if 'file' not in request.files:
-    #         flash('no file part')
-    #         return redirect(request.url)
 
-    #     # try:
-    #     file = request.files['file']
-    #     print(file.filename)
+@app.route('/mongo-connect', methods=['GET'])
+def get_mongo_connect():
+    return MONGO_ADDRESS
 
-    #     if file.filename == '':
-    #         flash('no selected file')
-    #         return redirect(request.url)
+@app.route('/addmongo', methods=['GET'])
+def add_mongo():
+    try:
+        mongo_client.set_dictionary('testsub', {'test': 'hello'}, 'json')
+    except Exception as e:
+        return composed_response(500, 'Request could not be completed.', e)
 
-    #     if file and allowed_file(file.filename):
-    #         filename = secure_filename(file.filename)
-    #         file.save(app.config['UPLOAD_FOLDER'], filename)
-    #         # saved_file = open(app.config['UPLOAD_FOLDER'], filename)
-    #         # content = saved_file.read()
-
-    #         # return jsonify(content)
-    #         return 'file uploaded successfully'
-    #     # except Exception as e:
-    #     #     print(f'Couldn\'t upload file {e}')
-        
+    return composed_response(200, {'message', f'was uploaded successfully!'})
 
 @app.route('/entries', methods=['GET'])
 def entries_get():
@@ -115,11 +102,3 @@ def entries_get():
     message = 'We got you your dictionary successfully!'
 
     return composed_response(200, message, json_dictionary)
-
-# @app.route('/define', methods=['POST'])
-# def entry_define():
-#     request_data = request.get_json()
-#     if not request_data:
-#         return 'Nothing!'
-    
-#     return codex.entries_update(request_data)
