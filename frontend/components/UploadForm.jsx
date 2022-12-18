@@ -8,6 +8,7 @@ import {
 } from 'reactstrap';
 
 const UploadForm = props => {
+  const { user } = props;
   const [selectedFile, setSelectedFile] = useState({});
   const [isSelected, setIsSelected] = useState(false);
   const [fileUploadSuccessful, setFileUploadSuccessful] = useState(false);
@@ -17,6 +18,7 @@ const UploadForm = props => {
     const formData = new FormData();
 
     formData.append('file', selectedFile);
+    formData.append('sub', user.sub);
 
     event.preventDefault();
 
@@ -52,11 +54,13 @@ const UploadForm = props => {
                 </div>
               ):
               (
-                <Input type="file"
-                  id="file"
-                  name="file"
-                  onChange={changeHandler}
-                />
+                <>
+                  <Input type="file"
+                    id="file"
+                    name="file"
+                    onChange={changeHandler}
+                  />
+                </>
               )
             }
       <Button type="submit"
