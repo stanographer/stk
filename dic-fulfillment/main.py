@@ -31,8 +31,9 @@ def read_json_dictionary(filename):
     except Exception as e:
         return 'There was an error reading your dictionary file.', e
 
-
-def composed_response(status, message, payload):
+# Receives data and returns a payload with messages and
+# response code for the request.
+def composed_response(status, message, payload = None):
     data = {
         'status': status,
         'message': message,
@@ -45,7 +46,6 @@ def composed_response(status, message, payload):
     response.headers.add('Access-Control-Allow-Origin', '*')
 
     return response
-
 
 @app.route('/')
 def homepage_get():
@@ -62,20 +62,23 @@ def allowed_file(filename):
 def get_extension(filename):
     return filename.rsplit('.', 1)[1].lower()
 
+# Route for file upload. Takes the file, saves it locally as JSON,
+# and uploads it locally temporarily as it is read.
 @app.route('/upload-file', methods=['GET', 'POST'])
 def upload_dictionary():
-    # file = request.files['file']
-    # user_id = request.args['sub']
-    # file.save(os.path.join(app.config['DICTIONARIES_DIRECTORY'], secure_filename(file.filename)))
-    
- 
-
     sub = request.form.get('sub')
+    if not sub:
+        return composed_response(401, 'Request failed. Valid subscriber token required. Are you sure you\'re logged in?', 'error')
+      
     file = request.files['file']
+    if not file:
+        print('no file!!!!!!!!!')
+        return composed_response(400, 'Request failed. No valid dictionary file found.', 'error')
+       
     now = datetime.now()
     extension = get_extension(file.filename)
     dictionary_name = secure_filename(f'{sub}_{now.strftime("%d/%m/%Y_%H:%M:%S")}.{extension}')
-
+        
     file.save(os.path.join(app.config['DICTIONARIES_DIRECTORY'], dictionary_name))
     json_dictionary = read_json_dictionary(dictionary_name)
 
